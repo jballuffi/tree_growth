@@ -38,23 +38,58 @@ rg2 <- as.data.table(tidyr::pivot_longer(data = rg,
 
 # convert RG to BAI ----------------------------------------------------------
 
+rg2[, year := as.integer(year)]
+
 setorder(rg2, tree, year)
 
 #get radius of previous year
-rg2[, rg_prev := shift(rg_t, n = 1, type = "lag"), by = tree]
+#rg2[, rg_prev := shift(rg_t, n = 1, type = "lag"), by = tree]
 
 #calculate total radius
-rg2[, total_radius := sum(rg_t), by = tree]
+#rg2[, total_radius := sum(rg_t), by = tree]
+
+
+# test <- rg2[tree == "KL-15"]
+# 
+# years <- test$year
+# 
+# radius <- lapply(years, function(x){
+#   test[year <= x, sum(rg_t)]
+# })
+# 
+# radius <- unlist(radius)
+# test$radius <- radius
+
+trees <- rg2[, unique(tree)]
+
+#x is a tree
+getradius <- function(x){
+  
+  dt <- rg2[tree == x]
+  
+  #make list of years
+  years <- dt$yearcol
+  
+  #sum all of the sumcol column up to and including each year
+  r <- lapply(years, function(n){
+    dt[year <= n, sum(rg_t)]
+  })
+  
+  r <- unlist(r)
+  
+  dt[, radius := r]
+  
+  return(dt[, .(tree, year, radius)])
+}
+
+radiusout <- rbindlist(lapply(trees, getradius))
+
+
+rg3 <- merge(rg2, radiusout, by = c("year", "tree"), all.x = TRUE)
 
 
 
-test <- rg2[tree == "KL-15"]
 
-
-rowsum(test$rg_t)
-
-
-sum(test$rg_t[1:2])
 
 
 #incorrect
