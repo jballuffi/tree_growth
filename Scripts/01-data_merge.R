@@ -40,7 +40,13 @@ rg2 <- as.data.table(tidyr::pivot_longer(data = rg,
 
 setorder(rg2, tree, year)
 
+#get radius of previous year
 rg2[, rg_prev := shift(rg_t, n = 1, type = "lag"), by = tree]
+
+#calculate total radius
+rg2[, total_radius := sum(rg_t), by = tree]
+
+
 
 test <- rg2[tree == "KL-15"]
 
