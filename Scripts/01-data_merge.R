@@ -28,12 +28,31 @@ rg[, `2022` := as.numeric(`2022`)][, `2021` := as.numeric(`2021`)]
 yearcols <- colnames(rg)[2:104]
 
 #pivot table by the year columns
-rg2 <- tidyr::pivot_longer(data = rg, 
+rg2 <- as.data.table(tidyr::pivot_longer(data = rg, 
                           cols = yearcols, 
                           names_to = "year", 
-                          values_to = "rg",
-                          values_drop_na = TRUE)
+                          values_to = "rg_t",
+                          values_drop_na = TRUE))
 
+
+
+# convert RG to BAI ----------------------------------------------------------
+
+setorder(rg2, tree, year)
+
+rg2[, rg_prev := shift(rg_t, n = 1, type = "lag"), by = tree]
+
+test <- rg2[tree == "KL-15"]
+
+
+rowsum(test$rg_t)
+
+
+sum(test$rg_t[1:2])
+
+
+#incorrect
+#rg2[, BAI := (pi*(rg_t^2)) - (pi*(rg_prev^2)), by = tree]
 
 
 # merge environmental variables with tree growth ---------------------------------------------
