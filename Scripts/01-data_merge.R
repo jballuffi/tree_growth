@@ -53,7 +53,7 @@ getradius <- function(x){
   #first cut data in rg2 to that tree
   dt <- rg2[tree == x]
   #make list of years for that tree
-  years <- dt$yearcol
+  years <- dt$year
   #sum all of the rg_t column up to and including each year
   r <- lapply(years, function(n){
     dt[year <= n, sum(rg_t)]
@@ -66,9 +66,11 @@ getradius <- function(x){
   return(dt[, .(tree, year, radius)])
 }
 
+#run function on list of trees using lapply
+#rbind list to make one datasheet
 radiusout <- rbindlist(lapply(trees, getradius))
 
-
+#merge radiuses back into original rg2 by year and tree
 rg3 <- merge(rg2, radiusout, by = c("year", "tree"), all.x = TRUE)
 
 
