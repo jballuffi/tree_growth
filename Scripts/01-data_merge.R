@@ -38,47 +38,31 @@ rg2 <- as.data.table(tidyr::pivot_longer(data = rg,
 
 # convert RG to BAI ----------------------------------------------------------
 
+#make year integer
 rg2[, year := as.integer(year)]
 
+#set order to be tree then year
 setorder(rg2, tree, year)
 
-#get radius of previous year
-#rg2[, rg_prev := shift(rg_t, n = 1, type = "lag"), by = tree]
-
-#calculate total radius
-#rg2[, total_radius := sum(rg_t), by = tree]
-
-
-# test <- rg2[tree == "KL-15"]
-# 
-# years <- test$year
-# 
-# radius <- lapply(years, function(x){
-#   test[year <= x, sum(rg_t)]
-# })
-# 
-# radius <- unlist(radius)
-# test$radius <- radius
-
+#grab all tree IDs
 trees <- rg2[, unique(tree)]
 
-#x is a tree
+# function that rums the radius up to that year.
+#l apply this function to the list of trees. therefore x = tree
 getradius <- function(x){
-  
+  #first cut data in rg2 to that tree
   dt <- rg2[tree == x]
-  
-  #make list of years
+  #make list of years for that tree
   years <- dt$yearcol
-  
-  #sum all of the sumcol column up to and including each year
+  #sum all of the rg_t column up to and including each year
   r <- lapply(years, function(n){
     dt[year <= n, sum(rg_t)]
   })
-  
+  #un list the output of that lapply
   r <- unlist(r)
-  
+  #create a column in data called radius
   dt[, radius := r]
-  
+  #return just tree, year, and radius
   return(dt[, .(tree, year, radius)])
 }
 
