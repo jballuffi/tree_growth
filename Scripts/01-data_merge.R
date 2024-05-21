@@ -31,7 +31,7 @@ yearcols <- colnames(rg)[2:104]
 rg2 <- as.data.table(tidyr::pivot_longer(data = rg, 
                           cols = yearcols, 
                           names_to = "year", 
-                          values_to = "rg_t",
+                          values_to = "rg",
                           values_drop_na = TRUE))
 
 
@@ -54,9 +54,9 @@ getradius <- function(x){
   dt <- rg2[tree == x]
   #make list of years for that tree
   years <- dt$year
-  #sum all of the rg_t column up to and including each year
+  #sum all of the rg column up to and including each year
   r <- lapply(years, function(n){
-    dt[year <= n, sum(rg_t)]
+    dt[year <= n, sum(rg)]
   })
   #un list the output of that lapply
   r <- unlist(r)
@@ -73,13 +73,23 @@ radiusout <- rbindlist(lapply(trees, getradius))
 #merge radiuses back into original rg2 by year and tree
 rg3 <- merge(rg2, radiusout, by = c("year", "tree"), all.x = TRUE)
 
+setorder(rg3, tree, year)
 
+#create column for previous radius
+rg3[, prev_radius := shift(radius, n = 1, type = "lag"), tree]
 
+#calculate BAI (pi*R^2 - pi*prevR^2)
+rg3[, BAI := (pi*(radius^2)) - (pi*(prev_radius^2))]
 
+#calculate basal area increment total
+rg3[, BAIT := sum(BAI, na.rm = TRUE), tree]
 
+#calculate proportion of annual area increase
+rg3[, PAAI := BAI/BAIT*100]
 
-#incorrect
-#rg2[, BAI := (pi*(rg_t^2)) - (pi*(rg_prev^2)), by = tree]
+#calculate tree age
+rg3[, age := year - min(year), tree]
+
 
 
 # merge environmental variables with tree growth ---------------------------------------------
@@ -93,20 +103,10 @@ setnames(vars, c("Year", "Cone_count", "Mast", "CMI_annual_sulphur"),
          c("year", "cones", "mast", "cmi"))
 
 #merge with tree growth
-dat <- as.data.table(merge(rg2, vars, by = "year", all.x = TRUE))
-
-
-
-# calculate tree age ------------------------------------------------------
+dat <- as.data.table(merge(rg3, vars, by = "year", all.x = TRUE))
 
 #reorder by tree then year
 setorder(dat, tree, year)
-
-#set year to be a numeric
-dat[, year := as.numeric(year)]
-
-#calculate age of tree (approximate)
-dat[, age := year - min(year), tree]
 
 
 
