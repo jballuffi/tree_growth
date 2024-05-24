@@ -36,7 +36,7 @@ rg2 <- as.data.table(tidyr::pivot_longer(data = rg,
 
 
 
-# convert RG to BAI ----------------------------------------------------------
+# convert RG to PAAI ----------------------------------------------------------
 
 #make year integer
 rg2[, year := as.integer(year)]
@@ -89,6 +89,12 @@ rg3[, PAAI := BAI/BAIT*100]
 
 #calculate tree age
 rg3[, age := year - min(year), tree]
+
+#get previous PAAI
+rg3[, prev_PAAI := shift(PAAI, n = 1, type = "lag"), tree]
+
+#get difference in PAAI from year prior
+rg3[, PAAI_diff := PAAI - prev_PAAI, tree]
 
 
 
