@@ -25,7 +25,7 @@ str(rg)
 rg[, `2022` := as.numeric(`2022`)][, `2021` := as.numeric(`2021`)]
 
 #get the columns after tree. just years
-yearcols <- colnames(rg)[2:104]
+yearcols <- colnames(rg)[2:104] #not reproducible
 
 #pivot table by the year columns
 rg2 <- as.data.table(tidyr::pivot_longer(data = rg, 
@@ -68,7 +68,7 @@ getradius <- function(x){
 
 #run function on list of trees using lapply
 #rbind list to make one datasheet
-radiusout <- rbindlist(lapply(trees, getradius))
+radiusout <-rbindlist(lapply(trees, getradius))
 
 #merge radiuses back into original rg2 by year and tree
 rg3 <- merge(rg2, radiusout, by = c("year", "tree"), all.x = TRUE)
